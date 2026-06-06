@@ -45,3 +45,7 @@ test:
 # Remove .macstral runtime dir (add --models to also remove the devstral-q3 model)
 clean *ARGS:
     bash scripts/clean.sh {{ARGS}}
+
+# Install a global 'macstral' command into ~/.local/bin (then run 'macstral up' from any repo)
+install-cli:
+    bash scripts/install-cli.sh

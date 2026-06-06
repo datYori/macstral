@@ -41,20 +41,22 @@ macstral is a dedicated tool repo. Clone it once, set the model up once, then dr
    just -f ~/tools/macstral/justfile setup
    ```
 
-2. Add an alias so you can launch from anywhere:
+2. Install the global `macstral` command (drops a wrapper into `~/.local/bin`):
 
    ```bash
-   alias mvibe='just -f ~/tools/macstral/justfile up'
+   just -f ~/tools/macstral/justfile install-cli
    ```
+
+   (Prefer an alias instead? `alias mvibe='just -f ~/tools/macstral/justfile up'`.)
 
 3. From any project, prewarm and open Vibe in that project:
 
    ```bash
    cd ~/code/myproject
-   mvibe                 # prewarms this dir, then opens Vibe here
+   macstral up           # prewarms this dir, then opens Vibe here
    ```
 
-`just up` prewarms and launches in the directory you run it from (via `invocation_directory()`), so the prefill and the session always target the same repo. You can also pass the directory explicitly: `just up ~/code/myproject`. Switching projects pays a fresh prefill (different working-directory context); that is expected.
+`macstral up` (i.e. `just up`) prewarms and launches in the directory you run it from (via `invocation_directory()`), so the prefill and the session always target the same repo. You can also pass the directory explicitly: `macstral up ~/code/myproject`. Switching projects pays a fresh prefill (different working-directory context); that is expected.
 
 ## 24 GB Macs
 
