@@ -41,6 +41,7 @@ First turn is slow: Vibe prefills its whole system prompt (instructions, skills,
 - Run Vibe inside the specific project directory, not a large parent like `~/perso`, so less working-directory context is loaded.
 - Trim Vibe skills you do not need; fewer skills means a smaller prefill.
 - Keep the model warm. `just serve` and `just up` start Ollama with `OLLAMA_KEEP_ALIVE` and pin the model so it does not cold-reload between turns. If you instead use the Ollama **app** daemon, set it yourself: `launchctl setenv OLLAMA_KEEP_ALIVE -1`, then restart Ollama. Tune the value via `MACSTRAL_KEEP_ALIVE` in `scripts/lib.sh`.
+- Free the memory on demand. `just unload` releases the warm model from RAM/VRAM immediately (keeps it on disk, leaves the daemon running); the next use reloads it.
 
 ## Roadmap
 

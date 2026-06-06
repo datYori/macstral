@@ -33,6 +33,10 @@ up PORT="11434":
 down:
     bash scripts/down.sh
 
+# Free the model from memory now (releases keep_alive; keeps model on disk, daemon up)
+unload PORT="11434":
+    bash scripts/unload.sh {{PORT}}
+
 # Lint scripts + run unit tests
 test:
     shellcheck scripts/*.sh tests/*.sh
