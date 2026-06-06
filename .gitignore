@@ -1,0 +1,6 @@
+.venv/
+.macstral/
+*.log
+*.bak
+*.bak.*
+.DS_Store
