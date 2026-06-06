@@ -1,4 +1,4 @@
-# macstral — local Mistral Vibe + Devstral Q4 on Apple Silicon
+# macstral: local Mistral Vibe + Devstral Q4 on Apple Silicon
 set shell := ["bash", "-cu"]
 
 # List recipes

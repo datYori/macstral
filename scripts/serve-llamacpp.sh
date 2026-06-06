@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 port="${1:-$MACSTRAL_PORT_DEFAULT}"
 ctx="${2:-16000}"
 
-# VERIFIED in Step 1 — replace with the exact repo/file you confirmed:
+# VERIFIED in Step 1 (replace with the exact repo/file you confirmed):
 GGUF_REPO="unsloth/Devstral-Small-2-24B-Instruct-2512-GGUF"
 GGUF_FILE="Devstral-Small-2-24B-Instruct-2512-Q4_K_M.gguf"
 
