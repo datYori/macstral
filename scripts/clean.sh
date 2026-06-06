@@ -5,12 +5,14 @@ cd "$(dirname "$0")/.."
 . scripts/lib.sh
 
 bash scripts/down.sh || true
-if [ -d .venv ]; then rm -rf .venv; log "removed .venv"; fi
 rm -rf .macstral
 
 if [ "${1:-}" = "--models" ]; then
-  log "removing model from HF cache: ${MACSTRAL_MODEL_ID}"
-  hf cache delete "$MACSTRAL_MODEL_ID" 2>/dev/null || \
-    log "could not auto-delete; run 'hf cache scan' / 'hf cache delete' manually."
+  if ollama list | awk '{print $1}' | grep -qx "${MACSTRAL_OLLAMA_MODEL}"; then
+    log "removing ollama model '${MACSTRAL_OLLAMA_MODEL}'"
+    ollama rm "$MACSTRAL_OLLAMA_MODEL"
+  else
+    log "ollama model '${MACSTRAL_OLLAMA_MODEL}' not found; skipping."
+  fi
 fi
 log "clean done."

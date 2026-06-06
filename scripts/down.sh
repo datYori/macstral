@@ -5,11 +5,14 @@ cd "$(dirname "$0")/.."
 . scripts/lib.sh
 
 pidfile=".macstral/server.pid"
-[ -f "$pidfile" ] || { log "no server pid file; nothing to stop."; exit 0; }
+if [ ! -f "$pidfile" ]; then
+  log "no server pid file; the Ollama app daemon (if running) is left untouched."
+  exit 0
+fi
 pid="$(cat "$pidfile")"
 if kill -0 "$pid" 2>/dev/null; then
-  kill "$pid"; log "stopped server (PID ${pid})."
+  kill "$pid"; log "stopped ollama daemon (PID ${pid})."
 else
-  log "server (PID ${pid}) not running."
+  log "daemon (PID ${pid}) not running."
 fi
 rm -f "$pidfile"

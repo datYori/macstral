@@ -4,7 +4,7 @@ cd "$(dirname "$0")/.."
 # shellcheck source=scripts/lib.sh
 . scripts/lib.sh
 
-backend="${1:-mlx}"
+backend="${1:-ollama}"
 port="${2:-$MACSTRAL_PORT_DEFAULT}"
 tmpl="config/vibe.${backend}.toml.tmpl"
 dest="${HOME}/.vibe/config.toml"
@@ -18,5 +18,5 @@ if [ -f "$dest" ]; then
   log "backed up existing config -> ${dest}.bak.${n}"
 fi
 
-sed -e "s|__PORT__|${port}|g" -e "s|__MODEL_ID__|${MACSTRAL_MODEL_ID}|g" "$tmpl" > "$dest"
+sed -e "s|__PORT__|${port}|g" -e "s|__MODEL_NAME__|${MACSTRAL_OLLAMA_MODEL}|g" "$tmpl" > "$dest"
 log "wrote ${dest} (backend=${backend}, port=${port})"

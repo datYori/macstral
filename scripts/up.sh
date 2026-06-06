@@ -4,31 +4,40 @@ cd "$(dirname "$0")/.."
 # shellcheck source=scripts/lib.sh
 . scripts/lib.sh
 
-backend="${1:-mlx}"
-port="${2:-$MACSTRAL_PORT_DEFAULT}"
+port="${1:-$MACSTRAL_PORT_DEFAULT}"
 mkdir -p .macstral
 
-case "$backend" in
-  mlx)      serve_script="scripts/serve.sh" ;;
-  llamacpp) serve_script="scripts/serve-llamacpp.sh" ;;
-  *) err "unknown backend '$backend' (mlx|llamacpp)"; exit 64 ;;
-esac
+# Write vibe config.
+bash scripts/write-vibe-config.sh ollama "$port"
 
-log "writing vibe config (backend=${backend})"
-bash scripts/write-vibe-config.sh "$backend" "$port"
-
-log "starting ${backend} server in background on :${port}"
-nohup bash "$serve_script" "$port" > .macstral/server.log 2>&1 &
-echo $! > .macstral/server.pid
-
-log "waiting for :${port} to accept connections..."
-for _ in $(seq 1 60); do
-  if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then break; fi
-  sleep 2
-done
-if ! lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
-  err "server did not come up; see .macstral/server.log"; exit 1
+# Ensure daemon is up.
+daemon_started=0
+if ! curl -fsS --max-time 5 "http://localhost:${port}/api/version" >/dev/null 2>&1; then
+  log "ollama daemon not running; starting it..."
+  nohup ollama serve > .macstral/server.log 2>&1 &
+  echo $! > .macstral/server.pid
+  daemon_started=1
+  log "waiting for ollama on :${port}..."
+  for _ in $(seq 1 60); do
+    if curl -fsS --max-time 2 "http://localhost:${port}/api/version" >/dev/null 2>&1; then break; fi
+    sleep 1
+  done
+  if ! curl -fsS --max-time 5 "http://localhost:${port}/api/version" >/dev/null 2>&1; then
+    err "ollama did not come up; see .macstral/server.log"
+    exit 1
+  fi
 fi
 
-log "server up. launching vibe (server keeps running; 'just down' to stop it)."
-vibe
+if [ "$daemon_started" -eq 0 ]; then
+  log "ollama already up on :${port} (app daemon; 'just down' will not stop it)"
+fi
+
+# Warm the model with a tiny request (non-fatal if it fails).
+log "warming model ${MACSTRAL_OLLAMA_MODEL}..."
+curl -fsS --max-time 60 "http://localhost:${port}/v1/chat/completions" \
+  -H 'Content-Type: application/json' \
+  -d "{\"model\":\"${MACSTRAL_OLLAMA_MODEL}\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"max_tokens\":1}" \
+  >/dev/null 2>&1 || log "  (warm-up request failed; model will load on first use)"
+
+log "launching vibe..."
+exec vibe

@@ -1,25 +1,28 @@
 # Troubleshooting
 
 ## `just doctor` exits non-zero
-- `macOS only` / `arm64 required`: macstral is Apple-Silicon-only.
-- `missing required tool`: install it. `brew install just`, `brew install huggingface-cli` (provides `hf`) or see the hf docs, and install `uv` from astral.sh.
-- `need >= 20 GB free`: free disk space; the model is ~15 GB.
-- `re-run with --force`: you have 16-23 GB; Q4 is tight. `just doctor --force` to proceed at reduced context.
 
-## Vibe tool calls are unreliable / it won't edit files
-MLX tool-calling is less robust than llama.cpp's grammar-constrained decoding. Switch to the fallback:
-```bash
-just down
-just serve-llamacpp 8080 16000   # terminal A
-just config llamacpp             # rewrites ~/.vibe/config.toml
-just vibe                        # terminal B
-```
+- `macOS only` / `arm64 required`: macstral is Apple-Silicon-only.
+- `missing required tool`: install it. `brew install just`, `brew install huggingface-cli` (provides `hf`), and install [Ollama](https://ollama.com/download) as the native macOS app (not brew).
+- `need >= 20 GB free`: free disk space; the GGUF is ~11.5 GB.
+- `RAM < 16 GB`: Q3_K_M requires at least 16 GB unified memory.
+
+## Ollama daemon not responding
+
+Run `ollama serve` manually in a terminal, or open the Ollama macOS app. Then re-run `just up`.
 
 ## Slow generation
-Dense 24B on M-series memory bandwidth is ~10-18 tok/s. Close memory-heavy apps, raise the GPU cap (docs/gpu-memory.md), keep context modest.
+
+Dense 24B at Q3 on M-series memory bandwidth is roughly 10-18 tok/s. Close memory-heavy apps. Raising the GPU cap (docs/gpu-memory.md) is optional but can help.
 
 ## Out of memory / system stalls
-Lower context, ensure the GPU wired limit is <= 80 % of RAM, close other apps. On 24 GB keep context near 16k.
+
+Q3_K_M (~11.5 GB) is chosen to fit 24 GB. If you observe paging: close other apps, and consider raising the GPU wired limit (docs/gpu-memory.md). On 16 GB the model is borderline; 24 GB is the recommended minimum.
+
+## Vibe ignores my config / uses the wrong model
+
+The `~/.vibe/config.toml` path is what Vibe reads. If `active_model` or provider settings are silently ignored, check that the top-level scalars (`active_model`, `enable_telemetry`, `enable_auto_update`) appear BEFORE any `[[providers]]` or `[[models]]` array-of-tables. TOML nests later scalars into the last array entry rather than top-level, which causes Vibe to ignore them. `just config ollama` rewrites the file correctly from the template.
 
 ## Vibe still phones home
-Confirm `enable_telemetry = false` and `enable_auto_update = false` in `~/.vibe/config.toml`. MCP servers / connectors reach external systems independently; disable them separately.
+
+Confirm `enable_telemetry = false` and `enable_auto_update = false` in `~/.vibe/config.toml`. MCP servers and connectors reach external systems independently; disable them separately.

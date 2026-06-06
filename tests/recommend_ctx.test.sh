@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 . scripts/lib.sh
 
 fail=0
-check() { # check <ram_gb> <expected "ctx tier">
+check() { # check <ram_gb> <expected tier>
   local got; got=$(recommend_ctx "$1")
   if [ "$got" = "$2" ]; then
     printf 'ok   recommend_ctx %s -> %s\n' "$1" "$got"
@@ -14,12 +14,11 @@ check() { # check <ram_gb> <expected "ctx tier">
   fi
 }
 
-check 64 "32000 comfortable"
-check 32 "32000 comfortable"
-check 31 "16000 ok-tight"
-check 24 "16000 ok-tight"
-check 23 "8000 tight"
-check 16 "8000 tight"
-check 8  "0 refused"
+check 64 "comfortable"
+check 32 "comfortable"
+check 24 "comfortable"
+check 23 "tight"
+check 16 "tight"
+check 8  "refused"
 
 exit "$fail"

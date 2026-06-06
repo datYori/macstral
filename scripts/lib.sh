@@ -2,9 +2,15 @@
 # Shared helpers for macstral. Source this file; do not execute it.
 
 # shellcheck disable=SC2034
-MACSTRAL_MODEL_ID="mlx-community/Devstral-Small-2-24B-Instruct-2512-4bit"
+MACSTRAL_OLLAMA_MODEL="devstral-q3"
 # shellcheck disable=SC2034
-MACSTRAL_PORT_DEFAULT=8080
+MACSTRAL_GGUF_REPO="unsloth/Devstral-Small-2-24B-Instruct-2512-GGUF"
+# shellcheck disable=SC2034
+MACSTRAL_GGUF_FILE="Devstral-Small-2-24B-Instruct-2512-Q3_K_M.gguf"
+# shellcheck disable=SC2034
+MACSTRAL_NUM_CTX=16384
+# shellcheck disable=SC2034
+MACSTRAL_PORT_DEFAULT=11434
 
 log() { printf '%s\n' "$*"; }
 err() { printf 'error: %s\n' "$*" >&2; }
@@ -16,14 +22,13 @@ mac_ram_gb() {
   printf '%s\n' "$(( bytes / 1024 / 1024 / 1024 ))"
 }
 
-# recommend_ctx <ram_gb> -> prints "<ctx> <tier>"
-# tiers: comfortable (>=32) | ok-tight (>=24) | tight (>=16) | refused (<16)
+# recommend_ctx <ram_gb> -> prints a tier word
+# tiers: comfortable (>=24) | tight (>=16) | refused (<16)
 recommend_ctx() {
   local ram="$1"
-  if   [ "$ram" -ge 32 ]; then printf '32000 comfortable\n'
-  elif [ "$ram" -ge 24 ]; then printf '16000 ok-tight\n'
-  elif [ "$ram" -ge 16 ]; then printf '8000 tight\n'
-  else                         printf '0 refused\n'
+  if   [ "$ram" -ge 24 ]; then printf 'comfortable\n'
+  elif [ "$ram" -ge 16 ]; then printf 'tight\n'
+  else                         printf 'refused\n'
   fi
 }
 

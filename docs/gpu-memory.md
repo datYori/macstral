@@ -51,4 +51,4 @@ sudo launchctl bootout system /Library/LaunchDaemons/com.local.iogpu.wiredlimit.
 sudo rm /Library/LaunchDaemons/com.local.iogpu.wiredlimit.plist
 ```
 
-> 32 GB+ Macs do not need this. Bump `18432` to `19456` (19 GB) only if you run Devstral at larger context and observe paging.
+> With Q3_K_M (~11.5 GB) the cap bump is optional on 24 GB: the model fits with headroom. Apply it if you observe paging under heavy agentic context load. 32 GB+ Macs do not need this.

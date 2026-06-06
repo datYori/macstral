@@ -1,0 +1,16 @@
+# Top-level scalars MUST come before any [[array]] table, or TOML
+# parses them as fields of the last array entry instead of as top-level keys.
+active_model       = "devstral-local"
+enable_telemetry   = false
+enable_auto_update = false
+
+[[providers]]
+name      = "local-ollama"
+api_base  = "http://localhost:__PORT__/v1"
+api_style = "openai"
+backend   = "generic"
+
+[[models]]
+name     = "__MODEL_NAME__"
+provider = "local-ollama"
+alias    = "devstral-local"
