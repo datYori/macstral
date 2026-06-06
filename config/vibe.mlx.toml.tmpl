@@ -1,0 +1,14 @@
+[[providers]]
+name      = "local-mlx"
+api_base  = "http://localhost:__PORT__/v1"
+api_style = "openai"
+backend   = "generic"
+
+[[models]]
+name     = "__MODEL_ID__"
+provider = "local-mlx"
+alias    = "devstral-local"
+
+active_model       = "devstral-local"
+enable_telemetry   = false
+enable_auto_update = false
