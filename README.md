@@ -4,6 +4,8 @@ Run [Mistral Vibe](https://github.com/mistralai/mistral-vibe) fully locally on A
 
 > Target: Apple Silicon Mac, 24 GB+ unified memory (16 GB tight but borderline). macOS only.
 
+Mirrored on [GitHub](https://github.com/datYori/macstral) and [GitLab](https://gitlab.com/isildur1/macstral). Clone from either.
+
 ## Quickstart
 
 ```bash
@@ -37,7 +39,10 @@ macstral is a dedicated tool repo. Clone it once, set the model up once, then dr
 1. Clone macstral and do the one-time, global setup. It creates the shared `devstral-q3` Ollama model and installs Vibe; neither is tied to a project.
 
    ```bash
+   # from GitHub:
    git clone https://github.com/datYori/macstral.git ~/tools/macstral
+   # or from GitLab:
+   # git clone https://gitlab.com/isildur1/macstral.git ~/tools/macstral
    just -f ~/tools/macstral/justfile setup
    ```
 
@@ -86,7 +91,6 @@ MLX and llama.cpp backends are on the roadmap but not implemented in v1. The Oll
 
 - [docs/gpu-memory.md](docs/gpu-memory.md): raise the Metal wired limit on 24 GB Macs
 - [docs/troubleshooting.md](docs/troubleshooting.md): common failures and fixes
-- [docs/DESIGN.md](docs/DESIGN.md): architecture and design rationale
 
 ## License
 
