@@ -9,7 +9,7 @@ Run [Mistral Vibe](https://github.com/mistralai/mistral-vibe) fully locally on A
 ```bash
 just doctor    # check your Mac + confirm settings
 just setup     # fetch GGUF (~11.5 GB), create devstral-q3 model, install Vibe
-just up        # write config + ensure daemon up + launch vibe
+just up        # prewarm (prefill) + launch vibe in the current directory
 ```
 
 ## Prerequisites
@@ -30,6 +30,32 @@ vibe  --OpenAI-compatible HTTP-->  Ollama :11434  -->  devstral-q3 (Devstral Sma
 
 No inference leaves the machine. Vibe points at `http://localhost:11434/v1`. The model runs fully on-device via Ollama.
 
+## Run it in any project
+
+macstral is a dedicated tool repo. Clone it once, set the model up once, then drive Vibe in any other repository.
+
+1. Clone macstral and do the one-time, global setup. It creates the shared `devstral-q3` Ollama model and installs Vibe; neither is tied to a project.
+
+   ```bash
+   git clone <macstral-repo> ~/tools/macstral
+   just -f ~/tools/macstral/justfile setup
+   ```
+
+2. Add an alias so you can launch from anywhere:
+
+   ```bash
+   alias mvibe='just -f ~/tools/macstral/justfile up'
+   ```
+
+3. From any project, prewarm and open Vibe in that project:
+
+   ```bash
+   cd ~/code/myproject
+   mvibe                 # prewarms this dir, then opens Vibe here
+   ```
+
+`just up` prewarms and launches in the directory you run it from (via `invocation_directory()`), so the prefill and the session always target the same repo. You can also pass the directory explicitly: `just up ~/code/myproject`. Switching projects pays a fresh prefill (different working-directory context); that is expected.
+
 ## 24 GB Macs
 
 Q3_K_M (~11.5 GB) fits comfortably in 24 GB. Raising the Metal GPU wired cap is optional but can help with headroom. See [docs/gpu-memory.md](docs/gpu-memory.md).
@@ -38,6 +64,7 @@ Q3_K_M (~11.5 GB) fits comfortably in 24 GB. Raising the Metal GPU wired cap is 
 
 First turn is slow: Vibe prefills its whole system prompt (instructions, skills, and working-directory context, roughly 8-9k tokens) before the first token. On an M4 Pro that prefill is about 50-60s for the dense 24B at Q3; after that it streams (~10-18 tok/s), and follow-up turns reuse Ollama's prompt cache. To keep it snappy:
 
+- `just up` already prewarms for you: it runs a throwaway prefill of this directory's prompt before opening Vibe, so your first real turn reuses Ollama's cache (seconds instead of ~90s). You wait once, up front, with a progress counter.
 - Run Vibe inside the specific project directory, not a large parent like `~/perso`, so less working-directory context is loaded.
 - Trim Vibe skills you do not need; fewer skills means a smaller prefill.
 - Keep the model warm. `just serve` and `just up` start Ollama with `OLLAMA_KEEP_ALIVE` and pin the model so it does not cold-reload between turns. If you instead use the Ollama **app** daemon, set it yourself: `launchctl setenv OLLAMA_KEEP_ALIVE -1`, then restart Ollama. Tune the value via `MACSTRAL_KEEP_ALIVE` in `scripts/lib.sh`.

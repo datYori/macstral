@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Capture the caller's directory BEFORE we cd into the repo. This is the project
+# Vibe will open in (and prewarm for), so the prefill and the session always match.
+invocation_dir="$(pwd)"
 cd "$(dirname "$0")/.."
 # shellcheck source=scripts/lib.sh
 . scripts/lib.sh
 
-port="${1:-$MACSTRAL_PORT_DEFAULT}"
+dir="${1:-$invocation_dir}"
+port="${2:-$MACSTRAL_PORT_DEFAULT}"
+[ -d "$dir" ] || { err "workdir not found: $dir"; exit 1; }
 mkdir -p .macstral
 
 # Write vibe config.
 bash scripts/write-vibe-config.sh ollama "$port"
 
-# Ensure daemon is up.
+# Ensure the Ollama daemon is up.
 daemon_started=0
 if ! curl -fsS --max-time 5 "http://localhost:${port}/api/version" >/dev/null 2>&1; then
   log "ollama daemon not running; starting it..."
@@ -27,19 +32,29 @@ if ! curl -fsS --max-time 5 "http://localhost:${port}/api/version" >/dev/null 2>
     exit 1
   fi
 fi
-
 if [ "$daemon_started" -eq 0 ]; then
   log "ollama already up on :${port} (app daemon; 'just down' will not stop it)"
 fi
 
-# Warm the model and pin keep_alive (native /api/chat; works even if the daemon
-# is the pre-existing Ollama app, where our OLLAMA_KEEP_ALIVE env would not apply).
-# Non-fatal if it fails.
-log "warming model ${MACSTRAL_OLLAMA_MODEL} (keep_alive=${MACSTRAL_KEEP_ALIVE})..."
-curl -fsS --max-time 90 "http://localhost:${port}/api/chat" \
-  -H 'Content-Type: application/json' \
-  -d "{\"model\":\"${MACSTRAL_OLLAMA_MODEL}\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"stream\":false,\"keep_alive\":\"${MACSTRAL_KEEP_ALIVE}\",\"options\":{\"num_predict\":1}}" \
-  >/dev/null 2>&1 || log "  (warm-up request failed; model will load on first use)"
+# Prewarm: load the model AND prefill Vibe's full system prompt FOR THIS workdir,
+# so the interactive first turn reuses Ollama's cached prefix (seconds, not ~90s).
+# Because we prefill and launch in the same dir, the cached prefix always matches.
+log "prewarming Devstral and caching Vibe's prompt for: ${dir}"
+log "(one-time ~60-90s prefill on a cold model; Vibe opens ready when it finishes)"
+( vibe -p "Reply with the single word READY." \
+    --workdir "$dir" --trust --max-turns 1 --output text >/dev/null 2>&1 ) &
+pf=$!
+secs=0
+while kill -0 "$pf" 2>/dev/null; do
+  printf '\r  prewarming... %3ds' "$secs"
+  secs=$((secs + 1))
+  sleep 1
+done
+if wait "$pf"; then
+  printf '\r  prewarm complete in %ds; first turn will be fast.   \n' "$secs"
+else
+  printf '\r  prewarm did not finish cleanly; Vibe will prefill on first turn.\n'
+fi
 
-log "launching vibe..."
-exec vibe
+log "launching vibe in ${dir}..."
+exec vibe --workdir "$dir"

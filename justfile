@@ -25,9 +25,9 @@ config BACKEND="ollama" PORT="11434":
 vibe:
     vibe
 
-# One shot: write config + ensure daemon up + launch vibe
-up PORT="11434":
-    bash scripts/up.sh {{PORT}}
+# One shot: prewarm (prefill Vibe's prompt for DIR) then launch vibe. DIR defaults to where you ran just.
+up DIR=invocation_directory() PORT="11434":
+    bash scripts/up.sh "{{DIR}}" {{PORT}}
 
 # Stop a background daemon started by 'up' (leaves the Ollama app daemon alone)
 down:
