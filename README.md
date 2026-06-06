@@ -37,7 +37,7 @@ macstral is a dedicated tool repo. Clone it once, set the model up once, then dr
 1. Clone macstral and do the one-time, global setup. It creates the shared `devstral-q3` Ollama model and installs Vibe; neither is tied to a project.
 
    ```bash
-   git clone <macstral-repo> ~/tools/macstral
+   git clone https://github.com/datYori/macstral.git ~/tools/macstral
    just -f ~/tools/macstral/justfile setup
    ```
 
