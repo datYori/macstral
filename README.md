@@ -34,6 +34,14 @@ No inference leaves the machine. Vibe points at `http://localhost:11434/v1`. The
 
 Q3_K_M (~11.5 GB) fits comfortably in 24 GB. Raising the Metal GPU wired cap is optional but can help with headroom. See [docs/gpu-memory.md](docs/gpu-memory.md).
 
+## Performance
+
+First turn is slow: Vibe prefills its whole system prompt (instructions, skills, and working-directory context, roughly 8-9k tokens) before the first token. On an M4 Pro that prefill is about 50-60s for the dense 24B at Q3; after that it streams (~10-18 tok/s), and follow-up turns reuse Ollama's prompt cache. To keep it snappy:
+
+- Run Vibe inside the specific project directory, not a large parent like `~/perso`, so less working-directory context is loaded.
+- Trim Vibe skills you do not need; fewer skills means a smaller prefill.
+- Keep the model warm. `just serve` and `just up` start Ollama with `OLLAMA_KEEP_ALIVE` and pin the model so it does not cold-reload between turns. If you instead use the Ollama **app** daemon, set it yourself: `launchctl setenv OLLAMA_KEEP_ALIVE -1`, then restart Ollama. Tune the value via `MACSTRAL_KEEP_ALIVE` in `scripts/lib.sh`.
+
 ## Roadmap
 
 MLX and llama.cpp backends are on the roadmap but not implemented in v1. The Ollama+Q3 path was chosen after MLX+Q4 OOM'd on 24 GB under Vibe's agentic context load and no prebuilt 3-bit MLX weights were available.

@@ -12,6 +12,6 @@ if curl -fsS --max-time 5 "http://localhost:${port}/api/version" >/dev/null 2>&1
   exit 0
 fi
 
-log "starting ollama on :${port}"
+log "starting ollama on :${port} (keep_alive=${MACSTRAL_KEEP_ALIVE})"
 # Note: to change the port, set OLLAMA_HOST=localhost:<port> before running ollama serve.
-exec ollama serve
+exec env OLLAMA_KEEP_ALIVE="$MACSTRAL_KEEP_ALIVE" ollama serve

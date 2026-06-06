@@ -15,6 +15,10 @@ Run `ollama serve` manually in a terminal, or open the Ollama macOS app. Then re
 
 Dense 24B at Q3 on M-series memory bandwidth is roughly 10-18 tok/s. Close memory-heavy apps. Raising the GPU cap (docs/gpu-memory.md) is optional but can help.
 
+## First turn takes ~1 minute before any output
+
+Expected. Vibe prefills its full system prompt (instructions, skills, working-directory context) before the first token; for the dense 24B at Q3 on an M4 Pro that prefill is about 50-60s. It then streams, and later turns reuse Ollama's prompt cache. Run Vibe in the specific project directory (not a large parent), trim unused skills, and keep the model warm (see the Performance section of the README; `just up` pins `keep_alive`). If `ollama ps` shows the model unloaded between turns, raise `MACSTRAL_KEEP_ALIVE` in `scripts/lib.sh` or `launchctl setenv OLLAMA_KEEP_ALIVE -1` for the Ollama app daemon.
+
 ## Out of memory / system stalls
 
 Q3_K_M (~11.5 GB) is chosen to fit 24 GB. If you observe paging: close other apps, and consider raising the GPU wired limit (docs/gpu-memory.md). On 16 GB the model is borderline; 24 GB is the recommended minimum.

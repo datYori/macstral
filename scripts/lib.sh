@@ -11,6 +11,10 @@ MACSTRAL_GGUF_FILE="Devstral-Small-2-24B-Instruct-2512-Q3_K_M.gguf"
 MACSTRAL_NUM_CTX=16384
 # shellcheck disable=SC2034
 MACSTRAL_PORT_DEFAULT=11434
+# How long Ollama keeps the model resident after a request (avoids cold reloads
+# between Vibe turns). "30m", "1h", or "-1" to pin forever.
+# shellcheck disable=SC2034
+MACSTRAL_KEEP_ALIVE="30m"
 
 log() { printf '%s\n' "$*"; }
 err() { printf 'error: %s\n' "$*" >&2; }
