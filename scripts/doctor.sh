@@ -16,7 +16,7 @@ done
 # --- hard blockers ---
 [ "$(uname -s)" = "Darwin" ] || { err "macOS only (found $(uname -s))"; exit 1; }
 [ "$(uname -m)" = "arm64" ]  || { err "Apple Silicon arm64 required (found $(uname -m))"; exit 1; }
-require_tools just hf ollama || exit 1
+require_tools just hf ollama uv || exit 1
 
 avail_gb=$(df -g / | awk 'NR==2 {print $4}')
 [ "$avail_gb" -ge "$MIN_DISK_GB" ] || { err "need >= ${MIN_DISK_GB} GB free on / (found ${avail_gb})"; exit 1; }

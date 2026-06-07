@@ -1,5 +1,6 @@
 .venv/
 .macstral/
+__pycache__/
 *.log
 *.bak
 *.bak.*

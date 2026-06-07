@@ -19,6 +19,10 @@ Dense 24B at Q3 on M-series memory bandwidth is roughly 10-18 tok/s. Close memor
 
 Expected. Vibe prefills its full system prompt (instructions, skills, working-directory context) before the first token; for the dense 24B at Q3 on an M4 Pro that prefill is about 50-60s. It then streams, and later turns reuse Ollama's prompt cache. Run Vibe in the specific project directory (not a large parent), trim unused skills, and keep the model warm (see the Performance section of the README; `just up` pins `keep_alive`). If `ollama ps` shows the model unloaded between turns, raise `MACSTRAL_KEEP_ALIVE` in `scripts/lib.sh` or `launchctl setenv OLLAMA_KEEP_ALIVE -1` for the Ollama app daemon.
 
+## `roles must alternate` 500 (looks like OOM, isn't)
+
+A mid-session `500 ... Jinja Exception: After the optional system message, conversation roles must alternate user and assistant roles ...` is a chat-template rejection, not an out-of-memory crash (the model stays loaded; `ollama ps` shows no eviction). Vibe can send two consecutive `user` messages -- typically after an ESC interrupt mid tool-loop -- which Devstral's template forbids. macstral's normalize-proxy (started by `just up` on :11436) repairs this automatically. If you still see it: confirm `~/.vibe/config.toml` `api_base` is the proxy port (`http://localhost:11436/v1`, not 11434), that the proxy is up (`curl localhost:11436/api/version`), and check `.macstral/proxy.log`. Full detail in [role-alternation.md](role-alternation.md).
+
 ## Out of memory / system stalls
 
 Q3_K_M (~11.5 GB) is chosen to fit 24 GB. If you observe paging: close other apps, and consider raising the GPU wired limit (docs/gpu-memory.md). On 16 GB the model is borderline; 24 GB is the recommended minimum.
