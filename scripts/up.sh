@@ -8,14 +8,13 @@ cd "$(dirname "$0")/.."
 . scripts/lib.sh
 
 dir="${1:-$invocation_dir}"
-port="${2:-$MACSTRAL_PORT_DEFAULT}"
+port="${2:-$MACSTRAL_PORT_DEFAULT}"   # Ollama daemon port
+proxy_port="$MACSTRAL_PROXY_PORT"     # port Vibe talks to (normalize-proxy)
 [ -d "$dir" ] || { err "workdir not found: $dir"; exit 1; }
+command -v uv >/dev/null 2>&1 || { err "uv not found (needed for the normalize-proxy); install from https://docs.astral.sh/uv/"; exit 1; }
 mkdir -p .macstral
 
-# Write vibe config.
-bash scripts/write-vibe-config.sh ollama "$port"
-
-# Ensure the Ollama daemon is up.
+# Ensure the Ollama daemon is up (on $port).
 daemon_started=0
 if ! curl -fsS --max-time 5 "http://localhost:${port}/api/version" >/dev/null 2>&1; then
   log "ollama daemon not running; starting it..."
@@ -35,6 +34,30 @@ fi
 if [ "$daemon_started" -eq 0 ]; then
   log "ollama already up on :${port} (app daemon; 'just down' will not stop it)"
 fi
+
+# Start the normalize-proxy: vibe -> :proxy_port -> ollama :port. It repairs
+# message-role alternation so Devstral's template stops 500ing on consecutive
+# user messages (mistral-vibe#255; see scripts/normalize.py). Left running until
+# 'just down'.
+if curl -fsS --max-time 2 "http://localhost:${proxy_port}/api/version" >/dev/null 2>&1; then
+  log "normalize-proxy already up on :${proxy_port}"
+else
+  log "starting normalize-proxy on :${proxy_port} -> :${port}..."
+  LISTEN_PORT="$proxy_port" OLLAMA_PORT="$port" \
+    nohup uv run scripts/normalize-proxy.py > .macstral/proxy.log 2>&1 &
+  echo $! > .macstral/proxy.pid
+  for _ in $(seq 1 30); do
+    if curl -fsS --max-time 2 "http://localhost:${proxy_port}/api/version" >/dev/null 2>&1; then break; fi
+    sleep 1
+  done
+  if ! curl -fsS --max-time 2 "http://localhost:${proxy_port}/api/version" >/dev/null 2>&1; then
+    err "normalize-proxy did not come up; see .macstral/proxy.log"
+    exit 1
+  fi
+fi
+
+# Write vibe config pointing at the proxy (not Ollama directly).
+bash scripts/write-vibe-config.sh ollama "$proxy_port"
 
 # Prewarm: load the model AND prefill Vibe's full system prompt FOR THIS workdir,
 # so the interactive first turn reuses Ollama's cached prefix (seconds, not ~90s).

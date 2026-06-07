@@ -18,6 +18,7 @@ just up        # prewarm (prefill) + launch vibe in the current directory
 - Xcode Command Line Tools: `xcode-select --install`
 - [`just`](https://just.systems): `brew install just`
 - [`hf`](https://github.com/huggingface/huggingface_hub) (Hugging Face CLI): `brew install huggingface-cli` or `pip install 'huggingface_hub[cli]'`
+- [`uv`](https://docs.astral.sh/uv/): `brew install uv` (runs the local normalize-proxy)
 - [Ollama](https://ollama.com/download): install the native macOS app (do **not** use brew)
 
 `vibe` (Mistral Vibe) is installed automatically by `just setup`.
@@ -25,10 +26,10 @@ just up        # prewarm (prefill) + launch vibe in the current directory
 ## How it works
 
 ```
-vibe  --OpenAI-compatible HTTP-->  Ollama :11434  -->  devstral-q3 (Devstral Small 2 24B Q3_K_M, num_ctx 16384)
+vibe  -->  normalize-proxy :11436  -->  Ollama :11434  -->  devstral-q3 (Devstral Small 2 24B Q3_K_M, num_ctx 16384)
 ```
 
-No inference leaves the machine. Vibe points at `http://localhost:11434/v1`. The model runs fully on-device via Ollama.
+No inference leaves the machine. Vibe points at `http://localhost:11436/v1`, a tiny local proxy that forwards to Ollama and repairs message-role alternation so Devstral's strict chat template stops 500ing on consecutive user messages (see [docs/role-alternation.md](docs/role-alternation.md)). The model runs fully on-device via Ollama.
 
 ## Run it in any project
 
@@ -76,6 +77,8 @@ First turn is slow: Vibe prefills its whole system prompt (instructions, skills,
 
 MLX and llama.cpp backends are on the roadmap but not implemented in v1. The Ollama+Q3 path was chosen after MLX+Q4 OOM'd on 24 GB under Vibe's agentic context load and no prebuilt 3-bit MLX weights were available.
 
+The `roles must alternate` 500 is currently fixed with a runtime normalize-proxy. A lighter, proxy-free alternative (override Devstral's chat template with an Ollama Go template that drops the alternation guard) is documented but not implemented: see [docs/role-alternation.md](docs/role-alternation.md#roadmap-alternative-go-template-override-not-implemented).
+
 ## Verify it works
 
 1. Run `just up` and wait for Vibe to open.
@@ -86,6 +89,7 @@ MLX and llama.cpp backends are on the roadmap but not implemented in v1. The Oll
 
 - [docs/gpu-memory.md](docs/gpu-memory.md): raise the Metal wired limit on 24 GB Macs
 - [docs/troubleshooting.md](docs/troubleshooting.md): common failures and fixes
+- [docs/role-alternation.md](docs/role-alternation.md): the `roles must alternate` 500, the normalize-proxy fix, and the Go-template roadmap option
 
 ## License
 

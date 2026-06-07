@@ -41,6 +41,7 @@ unload PORT="11434":
 test:
     shellcheck scripts/*.sh tests/*.sh
     bash tests/recommend_ctx.test.sh
+    uv run tests/normalize_test.py
 
 # Remove .macstral runtime dir (add --models to also remove the devstral-q3 model)
 clean *ARGS:
