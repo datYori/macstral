@@ -1,0 +1,4 @@
+shellcheck:
+  image: koalaman/shellcheck-alpine:stable
+  script:
+    - shellcheck scripts/*.sh tests/*.sh
