@@ -4,8 +4,6 @@ Run [Mistral Vibe](https://github.com/mistralai/mistral-vibe) fully locally on A
 
 > Target: Apple Silicon Mac, 24 GB+ unified memory (16 GB tight but borderline). macOS only.
 
-Mirrored on [GitHub](https://github.com/datYori/macstral) and [GitLab](https://gitlab.com/isildur1/macstral). Clone from either.
-
 ## Quickstart
 
 ```bash
@@ -39,10 +37,7 @@ macstral is a dedicated tool repo. Clone it once, set the model up once, then dr
 1. Clone macstral and do the one-time, global setup. It creates the shared `devstral-q3` Ollama model and installs Vibe; neither is tied to a project.
 
    ```bash
-   # from GitHub:
-   git clone https://github.com/datYori/macstral.git ~/tools/macstral
-   # or from GitLab:
-   # git clone https://gitlab.com/isildur1/macstral.git ~/tools/macstral
+   git clone https://gitlab.com/isildur1/macstral.git ~/tools/macstral
    just -f ~/tools/macstral/justfile setup
    ```
 
